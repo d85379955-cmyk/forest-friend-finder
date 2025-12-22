@@ -5,10 +5,16 @@ interface SignalStatusProps {
   networkStatus: "online" | "offline";
   signalStrength: number; // 0-4
   bluetoothEnabled: boolean;
+  connectionType?: string;
 }
 
-export const SignalStatus = ({ networkStatus, signalStrength, bluetoothEnabled }: SignalStatusProps) => {
+export const SignalStatus = ({ networkStatus, signalStrength, bluetoothEnabled, connectionType }: SignalStatusProps) => {
   const isOnline = networkStatus === "online";
+  
+  const getConnectionLabel = () => {
+    if (!connectionType || connectionType === "unknown") return "Network";
+    return connectionType.toUpperCase();
+  };
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-card">
@@ -49,7 +55,7 @@ export const SignalStatus = ({ networkStatus, signalStrength, bluetoothEnabled }
             <SignalZero className="w-6 h-6 text-muted-foreground" />
           )}
           <span className="text-xs font-medium">
-            {signalStrength > 0 ? `${signalStrength}/4` : "No Signal"}
+            {signalStrength > 0 ? getConnectionLabel() : "No Signal"}
           </span>
         </div>
 
