@@ -1,31 +1,49 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Flashlight, Volume2, VolumeX, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
+import { useNativeFlashlight } from "@/hooks/useNativeFlashlight";
+import { useSiren } from "@/hooks/useSiren";
+import { useNativeHaptics } from "@/hooks/useNativeHaptics";
 
 export const SurvivalTools = () => {
-  const [flashlightOn, setFlashlightOn] = useState(false);
-  const [sirenOn, setSirenOn] = useState(false);
-  const [sosPattern, setSosPattern] = useState(false);
+  const flashlight = useNativeFlashlight();
+  const siren = useSiren();
+  const haptics = useNativeHaptics();
 
-  const toggleFlashlight = () => {
-    setFlashlightOn(!flashlightOn);
-    toast(flashlightOn ? "Flashlight OFF" : "Flashlight ON", {
-      icon: flashlightOn ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />,
-    });
+  const toggleFlashlight = async () => {
+    const success = await flashlight.toggle();
+    if (success || !flashlight.isAvailable) {
+      await haptics.impact();
+      toast(flashlight.isOn ? "Flashlight OFF" : "Flashlight ON", {
+        icon: flashlight.isOn ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />,
+      });
+    } else {
+      toast.error("Flashlight not available", {
+        description: "Camera permission may be required",
+      });
+    }
   };
 
-  const toggleSosPattern = () => {
-    setSosPattern(!sosPattern);
-    toast(sosPattern ? "SOS Pattern OFF" : "SOS Light Pattern Active", {
-      description: sosPattern ? undefined : "Blinking ... --- ...",
-    });
+  const toggleSosPattern = async () => {
+    await haptics.impact();
+    if (flashlight.sosActive) {
+      await flashlight.stopSosPattern();
+      toast("SOS Pattern OFF");
+    } else {
+      await flashlight.startSosPattern();
+      // Also start haptic SOS pattern
+      haptics.sosPattern();
+      toast("SOS Light Pattern Active", {
+        description: "Blinking ... --- ...",
+      });
+    }
   };
 
-  const toggleSiren = () => {
-    setSirenOn(!sirenOn);
-    toast(sirenOn ? "Siren OFF" : "Emergency Siren Active", {
-      icon: sirenOn ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />,
+  const toggleSiren = async () => {
+    await haptics.impact();
+    siren.toggleSiren();
+    toast(siren.isPlaying ? "Siren OFF" : "Emergency Siren Active", {
+      icon: siren.isPlaying ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />,
     });
   };
 
@@ -35,20 +53,22 @@ export const SurvivalTools = () => {
       
       <div className="grid grid-cols-3 gap-3">
         <Button
-          variant={flashlightOn ? "safe" : "glass"}
+          variant={flashlight.isOn ? "safe" : "glass"}
           className="flex flex-col items-center gap-2 h-auto py-4"
           onClick={toggleFlashlight}
+          disabled={!flashlight.isAvailable}
         >
-          <Flashlight className={`w-6 h-6 ${flashlightOn ? "" : "text-muted-foreground"}`} />
+          <Flashlight className={`w-6 h-6 ${flashlight.isOn ? "" : "text-muted-foreground"}`} />
           <span className="text-xs font-medium">Light</span>
         </Button>
 
         <Button
-          variant={sosPattern ? "warning" : "glass"}
+          variant={flashlight.sosActive ? "warning" : "glass"}
           className="flex flex-col items-center gap-2 h-auto py-4"
           onClick={toggleSosPattern}
+          disabled={!flashlight.isAvailable}
         >
-          <div className={`flex gap-1 ${sosPattern ? "animate-pulse" : ""}`}>
+          <div className={`flex gap-1 ${flashlight.sosActive ? "animate-pulse" : ""}`}>
             <div className="w-1.5 h-1.5 rounded-full bg-current" />
             <div className="w-1.5 h-1.5 rounded-full bg-current" />
             <div className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -57,18 +77,24 @@ export const SurvivalTools = () => {
         </Button>
 
         <Button
-          variant={sirenOn ? "destructive" : "glass"}
+          variant={siren.isPlaying ? "destructive" : "glass"}
           className="flex flex-col items-center gap-2 h-auto py-4"
           onClick={toggleSiren}
         >
-          {sirenOn ? (
-            <Volume2 className="w-6 h-6" />
+          {siren.isPlaying ? (
+            <Volume2 className="w-6 h-6 animate-pulse" />
           ) : (
             <VolumeX className="w-6 h-6 text-muted-foreground" />
           )}
           <span className="text-xs font-medium">Siren</span>
         </Button>
       </div>
+
+      {!flashlight.isAvailable && (
+        <p className="text-xs text-muted-foreground mt-3 text-center">
+          Flashlight requires camera permission on this device
+        </p>
+      )}
     </div>
   );
 };
