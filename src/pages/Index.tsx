@@ -8,6 +8,7 @@ import { BatteryStatus } from "@/components/BatteryStatus";
 import { EmergencyContacts } from "@/components/EmergencyContacts";
 import { QuickActions } from "@/components/QuickActions";
 import { SOSActiveOverlay } from "@/components/SOSActiveOverlay";
+import { BluetoothMesh } from "@/components/BluetoothMesh";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
 import { useNativeNetwork } from "@/hooks/useNativeNetwork";
 import { useBattery } from "@/hooks/useBattery";
@@ -189,6 +190,15 @@ const Index = () => {
             signalStrength={getSignalStrength()}
             bluetoothEnabled={true}
             connectionType={networkStatus.connectionType}
+          />
+
+          {/* Bluetooth Mesh Network */}
+          <BluetoothMesh
+            sosActive={sosActive}
+            gpsData={{ latitude: gpsData.latitude, longitude: gpsData.longitude }}
+            onRelaySuccess={() => {
+              toast.success("SOS relayed through mesh network!");
+            }}
           />
 
           {/* Survival Tools */}
