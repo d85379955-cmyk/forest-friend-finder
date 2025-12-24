@@ -9,12 +9,15 @@ import { EmergencyContacts } from "@/components/EmergencyContacts";
 import { QuickActions } from "@/components/QuickActions";
 import { SOSActiveOverlay } from "@/components/SOSActiveOverlay";
 import { BluetoothMesh } from "@/components/BluetoothMesh";
+import { SMSStatus } from "@/components/SMSStatus";
+import { OfflineMap } from "@/components/OfflineMap";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
 import { useNativeNetwork } from "@/hooks/useNativeNetwork";
 import { useBattery } from "@/hooks/useBattery";
 import { useNativeHaptics } from "@/hooks/useNativeHaptics";
 import { useNativeNotifications } from "@/hooks/useNativeNotifications";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useAutoSMS } from "@/hooks/useAutoSMS";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 
@@ -33,6 +36,7 @@ const defaultContacts: Contact[] = [
 const Index = () => {
   const [sosActive, setSosActive] = useState(false);
   const [survivalMode, setSurvivalMode] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
   
   const { value: contacts, setValue: setContacts, isLoading } = useLocalStorage<Contact[]>(
     "emergency_contacts",
@@ -44,6 +48,28 @@ const Index = () => {
   const batteryStatus = useBattery();
   const haptics = useNativeHaptics();
   const notifications = useNativeNotifications();
+
+  // Auto-SMS hook
+  const { hasSent: smsSent } = useAutoSMS({
+    sosActive,
+    isOnline: networkStatus.isOnline,
+    contacts,
+    gpsData: {
+      latitude: gpsData.latitude,
+      longitude: gpsData.longitude,
+      accuracy: gpsData.accuracy,
+    },
+    onSmsSent: (contact) => {
+      toast.success(`📤 SOS sent to ${contact.name}`, {
+        description: `Message sent to ${contact.phone}`,
+      });
+    },
+    onSmsError: (contact, error) => {
+      toast.error(`Failed to send SMS to ${contact.name}`, {
+        description: error,
+      });
+    },
+  });
 
   const isNative = Capacitor.isNativePlatform();
 
@@ -58,16 +84,16 @@ const Index = () => {
     }
   }, [batteryStatus.level, survivalMode, haptics]);
 
-  // Auto-trigger SOS when network becomes available
+  // Auto-trigger notification when network becomes available during SOS
   useEffect(() => {
-    if (sosActive && networkStatus.isOnline) {
+    if (sosActive && networkStatus.isOnline && !smsSent) {
       toast.success("📶 Signal Detected!", {
-        description: "Attempting to send SOS messages...",
+        description: "Sending SOS messages to all contacts...",
         duration: 5000,
       });
       haptics.notification();
     }
-  }, [sosActive, networkStatus.isOnline, haptics]);
+  }, [sosActive, networkStatus.isOnline, smsSent, haptics]);
 
   // Handle SOS activation
   const handleSOSActivate = async () => {
@@ -152,7 +178,7 @@ const Index = () => {
         {/* Quick Actions */}
         <section className="px-4 mb-6">
           <QuickActions
-            onNavigateToMap={() => toast("Offline maps coming soon")}
+            onNavigateToMap={() => setMapOpen(true)}
             onNavigateToContacts={() => {
               document.getElementById("contacts-section")?.scrollIntoView({ behavior: "smooth" });
             }}
@@ -161,6 +187,16 @@ const Index = () => {
 
         {/* Status Grid */}
         <section className="px-4 space-y-4">
+          {/* SMS Status - Only show during SOS */}
+          {sosActive && (
+            <SMSStatus
+              hasSent={smsSent}
+              isOnline={networkStatus.isOnline}
+              sosActive={sosActive}
+              contactsCount={contacts.length}
+            />
+          )}
+
           {/* Battery Status */}
           <BatteryStatus
             level={batteryStatus.level}
@@ -223,6 +259,16 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      {/* Offline Map */}
+      <OfflineMap
+        latitude={gpsData.latitude}
+        longitude={gpsData.longitude}
+        heading={gpsData.heading}
+        isOpen={mapOpen}
+        onClose={() => setMapOpen(false)}
+        sosActive={sosActive}
+      />
 
       {/* SOS Active Overlay */}
       {sosActive && (
