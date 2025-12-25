@@ -11,6 +11,7 @@ import { SOSActiveOverlay } from "@/components/SOSActiveOverlay";
 import { BluetoothMesh } from "@/components/BluetoothMesh";
 import { SMSStatus } from "@/components/SMSStatus";
 import { OfflineMap } from "@/components/OfflineMap";
+import { PathDetection } from "@/components/PathDetection";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
 import { useNativeNetwork } from "@/hooks/useNativeNetwork";
 import { useBattery } from "@/hooks/useBattery";
@@ -235,6 +236,15 @@ const Index = () => {
             onRelaySuccess={() => {
               toast.success("SOS relayed through mesh network!");
             }}
+          />
+
+          {/* AI Path Detection */}
+          <PathDetection
+            latitude={gpsData.latitude}
+            longitude={gpsData.longitude}
+            accuracy={gpsData.accuracy}
+            heading={gpsData.heading}
+            onSOSTrigger={handleSOSActivate}
           />
 
           {/* Survival Tools */}
