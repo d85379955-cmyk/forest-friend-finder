@@ -12,6 +12,7 @@ import { BluetoothMesh } from "@/components/BluetoothMesh";
 import { SMSStatus } from "@/components/SMSStatus";
 import { OfflineMap } from "@/components/OfflineMap";
 import { PathDetection } from "@/components/PathDetection";
+import { FallDetection } from "@/components/FallDetection";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
 import { useNativeNetwork } from "@/hooks/useNativeNetwork";
 import { useBattery } from "@/hooks/useBattery";
@@ -246,6 +247,9 @@ const Index = () => {
             heading={gpsData.heading}
             onSOSTrigger={handleSOSActivate}
           />
+
+          {/* Fall Detection */}
+          <FallDetection onSOSTrigger={handleSOSActivate} />
 
           {/* Survival Tools */}
           <SurvivalTools />
