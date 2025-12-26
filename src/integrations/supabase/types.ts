@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          blood_type: string | null
+          created_at: string
+          display_name: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          id: string
+          medical_conditions: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blood_type?: string | null
+          created_at?: string
+          display_name?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          medical_conditions?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blood_type?: string | null
+          created_at?: string
+          display_name?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          medical_conditions?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -52,6 +52,10 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        safe: "hsl(var(--safe))",
+        danger: "hsl(var(--danger))",
+        caution: "hsl(var(--caution))",
+        info: "hsl(var(--info))",
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -73,7 +77,8 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
-        display: ["Outfit", "sans-serif"],
+        display: ["Rajdhani", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",
