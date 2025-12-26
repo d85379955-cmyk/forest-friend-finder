@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Cloud, Activity, Wrench, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNativeHaptics } from "@/hooks/useNativeHaptics";
+import { ImpactStyle } from "@capacitor/haptics";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
@@ -13,6 +15,12 @@ const navItems = [
 export const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { impact } = useNativeHaptics();
+
+  const handleNavClick = (path: string) => {
+    impact(ImpactStyle.Light);
+    navigate(path);
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-area-bottom">
@@ -23,9 +31,9 @@ export const BottomNav = () => {
           return (
             <button
               key={item.path}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleNavClick(item.path)}
               className={cn(
-                "flex flex-col items-center justify-center py-2 px-4 rounded-xl transition-all duration-200",
+                "flex flex-col items-center justify-center py-2 px-4 rounded-xl transition-all duration-200 active:scale-90",
                 isActive 
                   ? "text-primary" 
                   : "text-muted-foreground hover:text-foreground"

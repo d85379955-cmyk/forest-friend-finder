@@ -1,6 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { pageOrder } from '@/components/BottomNav';
+import { PageTransition } from '@/components/PageTransition';
+import { useNativeHaptics } from '@/hooks/useNativeHaptics';
+import { ImpactStyle } from '@capacitor/haptics';
 
 interface SwipeNavigationProps {
   children: React.ReactNode;
@@ -15,6 +18,7 @@ export const SwipeNavigation = ({ children }: SwipeNavigationProps) => {
   const touchStartY = useRef<number>(0);
   const touchEndY = useRef<number>(0);
   const isScrolling = useRef<boolean | null>(null);
+  const { impact } = useNativeHaptics();
 
   const minSwipeDistance = 80;
 
@@ -38,16 +42,18 @@ export const SwipeNavigation = ({ children }: SwipeNavigationProps) => {
       // Swipe left - go to next page
       const nextIndex = currentIndex + 1;
       if (nextIndex < pageOrder.length) {
+        impact(ImpactStyle.Medium);
         navigate(pageOrder[nextIndex]);
       }
     } else {
       // Swipe right - go to previous page
       const prevIndex = currentIndex - 1;
       if (prevIndex >= 0) {
+        impact(ImpactStyle.Medium);
         navigate(pageOrder[prevIndex]);
       }
     }
-  }, [navigate, getCurrentPageIndex]);
+  }, [navigate, getCurrentPageIndex, impact]);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -86,7 +92,9 @@ export const SwipeNavigation = ({ children }: SwipeNavigationProps) => {
 
   return (
     <div ref={containerRef} className="min-h-screen">
-      {children}
+      <PageTransition>
+        {children}
+      </PageTransition>
     </div>
   );
 };

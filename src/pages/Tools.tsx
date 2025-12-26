@@ -1,9 +1,24 @@
+import { useState } from "react";
 import { Wrench } from "lucide-react";
 import { SurvivalTools } from "@/components/SurvivalTools";
+import { PullToRefresh } from "@/components/PullToRefresh";
+import { useNativeHaptics } from "@/hooks/useNativeHaptics";
+import { NotificationType } from "@capacitor/haptics";
+import { toast } from "sonner";
 
 export default function Tools() {
+  const { notification } = useNativeHaptics();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = async () => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setRefreshKey(prev => prev + 1);
+    notification(NotificationType.Success);
+    toast.success("Tools refreshed");
+  };
+
   return (
-    <div className="min-h-screen bg-background hexagon-bg pb-24">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background hexagon-bg pb-24">
       <header className="sticky top-0 z-40 backdrop-blur-lg bg-background/80 border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <div className="p-2 rounded-xl bg-warning/20">
@@ -16,7 +31,7 @@ export default function Tools() {
         </div>
       </header>
 
-      <main className="p-4 space-y-4">
+      <main className="p-4 space-y-4" key={refreshKey}>
         <SurvivalTools />
 
         <div className="bg-card/50 border border-border rounded-xl p-4">
@@ -29,6 +44,6 @@ export default function Tools() {
           </div>
         </div>
       </main>
-    </div>
+    </PullToRefresh>
   );
 }

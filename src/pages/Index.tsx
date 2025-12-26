@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { SOSButton } from "@/components/SOSButton";
 import { SOSActiveOverlay } from "@/components/SOSActiveOverlay";
 import { SMSStatus } from "@/components/SMSStatus";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
 import { useNativeNetwork } from "@/hooks/useNativeNetwork";
 import { useBattery } from "@/hooks/useBattery";
@@ -11,6 +12,7 @@ import { useNativeHaptics } from "@/hooks/useNativeHaptics";
 import { useNativeNotifications } from "@/hooks/useNativeNotifications";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useAutoSMS } from "@/hooks/useAutoSMS";
+import { NotificationType } from "@capacitor/haptics";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { Battery, Wifi, WifiOff, MapPin, Navigation, Radio } from "lucide-react";
@@ -31,6 +33,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [sosActive, setSosActive] = useState(false);
   const [survivalMode, setSurvivalMode] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   const { value: contacts } = useLocalStorage<Contact[]>("emergency_contacts", defaultContacts);
 
@@ -73,11 +76,18 @@ const Index = () => {
     toast.success("SOS Deactivated");
   };
 
+  const handleRefresh = async () => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setRefreshKey(prev => prev + 1);
+    haptics.notification(NotificationType.Success);
+    toast.success("Dashboard refreshed");
+  };
+
   return (
-    <div className="min-h-screen bg-background hexagon-bg pb-24">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background hexagon-bg pb-24">
       <Header sosActive={sosActive} />
 
-      <main>
+      <main key={refreshKey}>
         {isNative && (
           <div className="mx-4 mt-2 bg-success/10 border border-success/30 rounded-lg px-3 py-1.5 text-xs text-success text-center">
             ✓ Native Mode Active
@@ -104,7 +114,7 @@ const Index = () => {
           </div>
           <button 
             onClick={() => navigate('/status')}
-            className="bg-card/50 border border-border rounded-xl p-3 text-center hover:bg-card transition-colors"
+            className="bg-card/50 border border-border rounded-xl p-3 text-center hover:bg-card transition-colors active:scale-95"
           >
             <Radio className="w-5 h-5 mx-auto text-primary" />
             <p className="text-lg font-display font-bold text-foreground mt-1">Mesh</p>
@@ -129,7 +139,7 @@ const Index = () => {
         {/* Location Card */}
         <button 
           onClick={() => navigate('/location')}
-          className="mx-4 w-[calc(100%-2rem)] bg-card/50 border border-border rounded-xl p-4 hover:bg-card transition-colors"
+          className="mx-4 w-[calc(100%-2rem)] bg-card/50 border border-border rounded-xl p-4 hover:bg-card transition-colors active:scale-[0.98]"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -165,7 +175,7 @@ const Index = () => {
       </main>
 
       {sosActive && <SOSActiveOverlay latitude={gpsData.latitude} longitude={gpsData.longitude} onDeactivate={handleSOSDeactivate} contactsCount={contacts.length} />}
-    </div>
+    </PullToRefresh>
   );
 };
 

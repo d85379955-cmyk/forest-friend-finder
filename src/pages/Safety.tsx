@@ -1,18 +1,31 @@
+import { useState } from "react";
 import { Activity } from "lucide-react";
 import { PathDetection } from "@/components/PathDetection";
 import { FallDetection } from "@/components/FallDetection";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
+import { useNativeHaptics } from "@/hooks/useNativeHaptics";
+import { NotificationType } from "@capacitor/haptics";
 import { toast } from "sonner";
 
 export default function Safety() {
   const gpsData = useNativeGPS(true);
+  const { notification } = useNativeHaptics();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleSOSTrigger = () => {
     toast.error("🚨 SOS Triggered from Safety Monitor!", { duration: 5000 });
   };
 
+  const handleRefresh = async () => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setRefreshKey(prev => prev + 1);
+    notification(NotificationType.Success);
+    toast.success("Safety data refreshed");
+  };
+
   return (
-    <div className="min-h-screen bg-background hexagon-bg pb-24">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background hexagon-bg pb-24">
       <header className="sticky top-0 z-40 backdrop-blur-lg bg-background/80 border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <div className="p-2 rounded-xl bg-success/20">
@@ -25,7 +38,7 @@ export default function Safety() {
         </div>
       </header>
 
-      <main className="p-4 space-y-4">
+      <main className="p-4 space-y-4" key={refreshKey}>
         <PathDetection
           latitude={gpsData.latitude}
           longitude={gpsData.longitude}
@@ -46,6 +59,6 @@ export default function Safety() {
           </div>
         </div>
       </main>
-    </div>
+    </PullToRefresh>
   );
 }
