@@ -1,21 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { SOSButton } from "@/components/SOSButton";
-import { GPSDisplay } from "@/components/GPSDisplay";
-import { SignalStatus } from "@/components/SignalStatus";
-import { SurvivalTools } from "@/components/SurvivalTools";
-import { BatteryStatus } from "@/components/BatteryStatus";
-import { EmergencyContacts } from "@/components/EmergencyContacts";
-import { QuickActions } from "@/components/QuickActions";
 import { SOSActiveOverlay } from "@/components/SOSActiveOverlay";
-import { BluetoothMesh } from "@/components/BluetoothMesh";
 import { SMSStatus } from "@/components/SMSStatus";
-import { OfflineMap } from "@/components/OfflineMap";
-import { PathDetection } from "@/components/PathDetection";
-import { FallDetection } from "@/components/FallDetection";
-import { WeatherAlerts } from "@/components/WeatherAlerts";
-import { FeatureSection } from "@/components/FeatureSection";
-import { SectionHeader } from "@/components/SectionHeader";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
 import { useNativeNetwork } from "@/hooks/useNativeNetwork";
 import { useBattery } from "@/hooks/useBattery";
@@ -25,7 +13,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useAutoSMS } from "@/hooks/useAutoSMS";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
-import { MapPin, Radio, Shield, Wrench, Users, Navigation, Cloud, Activity } from "lucide-react";
+import { Cloud, Radio, MapPin, Activity, Wrench, Users, ChevronRight, Battery, Wifi, WifiOff } from "lucide-react";
 
 interface Contact {
   id: string;
@@ -40,14 +28,11 @@ const defaultContacts: Contact[] = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
   const [sosActive, setSosActive] = useState(false);
   const [survivalMode, setSurvivalMode] = useState(false);
-  const [mapOpen, setMapOpen] = useState(false);
   
-  const { value: contacts, setValue: setContacts, isLoading } = useLocalStorage<Contact[]>(
-    "emergency_contacts",
-    defaultContacts
-  );
+  const { value: contacts } = useLocalStorage<Contact[]>("emergency_contacts", defaultContacts);
 
   const gpsData = useNativeGPS(true);
   const networkStatus = useNativeNetwork();
@@ -88,106 +73,80 @@ const Index = () => {
     toast.success("SOS Deactivated");
   };
 
-  const handleAddContact = (contact: Omit<Contact, "id">) => {
-    setContacts([...contacts, { ...contact, id: Date.now().toString() }]);
-  };
-
-  const handleRemoveContact = (id: string) => {
-    setContacts(contacts.filter((c) => c.id !== id));
-  };
-
-  const getSignalStrength = () => {
-    if (!networkStatus.isOnline) return 0;
-    const type = networkStatus.connectionType;
-    if (type === "wifi") return 4;
-    if (type === "4g") return 3;
-    if (type === "3g") return 2;
-    return 1;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
+  const menuItems = [
+    { icon: Cloud, label: "Weather Alerts", desc: "Storm detection", path: "/weather", color: "text-accent", bg: "bg-accent/20" },
+    { icon: Radio, label: "System Status", desc: "Network & power", path: "/status", color: "text-primary", bg: "bg-primary/20" },
+    { icon: MapPin, label: "Location", desc: "GPS tracking", path: "/location", color: "text-primary", bg: "bg-primary/20" },
+    { icon: Activity, label: "Safety", desc: "Fall & path detection", path: "/safety", color: "text-success", bg: "bg-success/20" },
+    { icon: Wrench, label: "Tools", desc: "Survival utilities", path: "/tools", color: "text-warning", bg: "bg-warning/20" },
+    { icon: Users, label: "Contacts", desc: "Emergency contacts", path: "/contacts", color: "text-destructive", bg: "bg-destructive/20" },
+  ];
 
   return (
     <div className="min-h-screen bg-background hexagon-bg">
       <Header sosActive={sosActive} />
 
-      <main className="pb-24 space-y-6">
+      <main className="pb-24">
         {isNative && (
           <div className="mx-4 mt-2 bg-success/10 border border-success/30 rounded-lg px-3 py-1.5 text-xs text-success text-center">
             ✓ Native Mode Active
           </div>
         )}
 
+        {/* Status Bar */}
+        <div className="mx-4 mt-4 flex items-center justify-between bg-card/50 border border-border rounded-xl px-4 py-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <Battery className={`w-4 h-4 ${batteryStatus.level <= 20 ? 'text-destructive' : 'text-success'}`} />
+              <span className="text-xs text-muted-foreground">{batteryStatus.level}%</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {networkStatus.isOnline ? (
+                <Wifi className="w-4 h-4 text-success" />
+              ) : (
+                <WifiOff className="w-4 h-4 text-warning" />
+              )}
+              <span className="text-xs text-muted-foreground">
+                {networkStatus.isOnline ? networkStatus.connectionType : 'Offline'}
+              </span>
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {gpsData.latitude?.toFixed(4)}, {gpsData.longitude?.toFixed(4)}
+          </div>
+        </div>
+
         {/* SOS Section */}
         <section className="py-8 px-4 flex flex-col items-center">
           <SOSButton onActivate={handleSOSActivate} isActive={sosActive} />
         </section>
 
-        <div className="section-divider" />
-
-        {/* Quick Actions */}
-        <FeatureSection>
-          <QuickActions onNavigateToMap={() => setMapOpen(true)} onNavigateToContacts={() => document.getElementById("contacts-section")?.scrollIntoView({ behavior: "smooth" })} />
-        </FeatureSection>
-
         {sosActive && (
-          <FeatureSection variant="warning">
+          <div className="mx-4 mb-4">
             <SMSStatus hasSent={smsSent} isOnline={networkStatus.isOnline} sosActive={sosActive} contactsCount={contacts.length} />
-          </FeatureSection>
+          </div>
         )}
 
-        {/* Weather Section */}
-        <FeatureSection variant="highlight">
-          <SectionHeader icon={Cloud} title="Weather Alerts" subtitle="Barometric storm detection" iconColor="text-accent" />
-          <WeatherAlerts latitude={gpsData.latitude} longitude={gpsData.longitude} isOnline={networkStatus.isOnline} onStormAlert={() => toast.warning("⚠️ Storm approaching!")} />
-        </FeatureSection>
-
-        {/* Status Section */}
-        <FeatureSection>
-          <SectionHeader icon={Radio} title="System Status" subtitle="Network & power monitoring" />
-          <div className="space-y-3">
-            <BatteryStatus level={batteryStatus.level} isCharging={batteryStatus.isCharging} survivalModeActive={survivalMode} />
-            <SignalStatus networkStatus={networkStatus.isOnline ? "online" : "offline"} signalStrength={getSignalStrength()} bluetoothEnabled={true} connectionType={networkStatus.connectionType} />
-            <BluetoothMesh sosActive={sosActive} gpsData={{ latitude: gpsData.latitude, longitude: gpsData.longitude }} onRelaySuccess={() => toast.success("SOS relayed!")} />
-          </div>
-        </FeatureSection>
-
-        {/* Location Section */}
-        <FeatureSection>
-          <SectionHeader icon={MapPin} title="Location Tracking" subtitle="GPS & navigation data" iconColor="text-primary" />
-          <div className="rounded-xl border border-border bg-card/50 p-4">
-            <GPSDisplay latitude={gpsData.latitude} longitude={gpsData.longitude} accuracy={gpsData.accuracy} timestamp={gpsData.timestamp} heading={gpsData.heading} />
-          </div>
-        </FeatureSection>
-
-        {/* Safety Section */}
-        <FeatureSection variant="success">
-          <SectionHeader icon={Activity} title="Safety Monitoring" subtitle="AI path & fall detection" iconColor="text-success" />
-          <div className="space-y-3">
-            <PathDetection latitude={gpsData.latitude} longitude={gpsData.longitude} accuracy={gpsData.accuracy} heading={gpsData.heading} onSOSTrigger={handleSOSActivate} />
-            <FallDetection onSOSTrigger={handleSOSActivate} />
-          </div>
-        </FeatureSection>
-
-        {/* Tools Section */}
-        <FeatureSection>
-          <SectionHeader icon={Wrench} title="Survival Tools" subtitle="Essential utilities" />
-          <SurvivalTools />
-        </FeatureSection>
-
-        {/* Contacts Section */}
-        <FeatureSection>
-          <div id="contacts-section">
-            <SectionHeader icon={Users} title="Emergency Contacts" subtitle="Quick access to help" iconColor="text-warning" />
-            <EmergencyContacts contacts={contacts} onAddContact={handleAddContact} onRemoveContact={handleRemoveContact} />
-          </div>
-        </FeatureSection>
+        {/* Navigation Menu */}
+        <section className="px-4 space-y-2">
+          <h2 className="font-display font-bold text-lg text-foreground mb-3">Features</h2>
+          {menuItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className="w-full flex items-center gap-4 p-4 bg-card/50 border border-border rounded-xl hover:bg-card transition-colors"
+            >
+              <div className={`p-2.5 rounded-xl ${item.bg}`}>
+                <item.icon className={`w-5 h-5 ${item.color}`} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-display font-semibold text-foreground">{item.label}</p>
+                <p className="text-xs text-muted-foreground">{item.desc}</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+          ))}
+        </section>
 
         {!networkStatus.isOnline && (
           <div className="fixed bottom-4 left-4 right-4 bg-warning/20 border border-warning/30 rounded-xl p-3 backdrop-blur-sm">
@@ -195,8 +154,6 @@ const Index = () => {
           </div>
         )}
       </main>
-
-      <OfflineMap latitude={gpsData.latitude} longitude={gpsData.longitude} heading={gpsData.heading} isOpen={mapOpen} onClose={() => setMapOpen(false)} sosActive={sosActive} />
 
       {sosActive && <SOSActiveOverlay latitude={gpsData.latitude} longitude={gpsData.longitude} onDeactivate={handleSOSDeactivate} contactsCount={contacts.length} />}
     </div>
