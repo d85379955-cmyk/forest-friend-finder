@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BottomNav, pageOrder } from "@/components/BottomNav";
+import { SwipeNavigation } from "@/components/SwipeNavigation";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Weather from "./pages/Weather";
@@ -15,12 +17,13 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+const AppContent = () => {
+  const location = useLocation();
+  const showBottomNav = pageOrder.includes(location.pathname);
+
+  return (
+    <>
+      <SwipeNavigation>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
@@ -30,9 +33,21 @@ const App = () => (
           <Route path="/safety" element={<Safety />} />
           <Route path="/tools" element={<Tools />} />
           <Route path="/contacts" element={<Contacts />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+      </SwipeNavigation>
+      {showBottomNav && <BottomNav />}
+    </>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
