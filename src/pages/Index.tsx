@@ -13,7 +13,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useAutoSMS } from "@/hooks/useAutoSMS";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
-import { Cloud, Radio, MapPin, Activity, Wrench, Users, ChevronRight, Battery, Wifi, WifiOff } from "lucide-react";
+import { Battery, Wifi, WifiOff, MapPin, Navigation, Radio } from "lucide-react";
 
 interface Contact {
   id: string;
@@ -46,7 +46,7 @@ const Index = () => {
     contacts,
     gpsData: { latitude: gpsData.latitude, longitude: gpsData.longitude, accuracy: gpsData.accuracy },
     onSmsSent: (contact) => toast.success(`📤 SOS sent to ${contact.name}`),
-    onSmsError: (contact, error) => toast.error(`Failed to send to ${contact.name}`),
+    onSmsError: (contact) => toast.error(`Failed to send to ${contact.name}`),
   });
 
   const isNative = Capacitor.isNativePlatform();
@@ -73,52 +73,51 @@ const Index = () => {
     toast.success("SOS Deactivated");
   };
 
-  const menuItems = [
-    { icon: Cloud, label: "Weather Alerts", desc: "Storm detection", path: "/weather", color: "text-accent", bg: "bg-accent/20" },
-    { icon: Radio, label: "System Status", desc: "Network & power", path: "/status", color: "text-primary", bg: "bg-primary/20" },
-    { icon: MapPin, label: "Location", desc: "GPS tracking", path: "/location", color: "text-primary", bg: "bg-primary/20" },
-    { icon: Activity, label: "Safety", desc: "Fall & path detection", path: "/safety", color: "text-success", bg: "bg-success/20" },
-    { icon: Wrench, label: "Tools", desc: "Survival utilities", path: "/tools", color: "text-warning", bg: "bg-warning/20" },
-    { icon: Users, label: "Contacts", desc: "Emergency contacts", path: "/contacts", color: "text-destructive", bg: "bg-destructive/20" },
-  ];
-
   return (
-    <div className="min-h-screen bg-background hexagon-bg">
+    <div className="min-h-screen bg-background hexagon-bg pb-24">
       <Header sosActive={sosActive} />
 
-      <main className="pb-24">
+      <main>
         {isNative && (
           <div className="mx-4 mt-2 bg-success/10 border border-success/30 rounded-lg px-3 py-1.5 text-xs text-success text-center">
             ✓ Native Mode Active
           </div>
         )}
 
-        {/* Status Bar */}
-        <div className="mx-4 mt-4 flex items-center justify-between bg-card/50 border border-border rounded-xl px-4 py-2">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Battery className={`w-4 h-4 ${batteryStatus.level <= 20 ? 'text-destructive' : 'text-success'}`} />
-              <span className="text-xs text-muted-foreground">{batteryStatus.level}%</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {networkStatus.isOnline ? (
-                <Wifi className="w-4 h-4 text-success" />
-              ) : (
-                <WifiOff className="w-4 h-4 text-warning" />
-              )}
-              <span className="text-xs text-muted-foreground">
-                {networkStatus.isOnline ? networkStatus.connectionType : 'Offline'}
-              </span>
-            </div>
+        {/* Quick Status Cards */}
+        <div className="grid grid-cols-3 gap-2 mx-4 mt-4">
+          <div className="bg-card/50 border border-border rounded-xl p-3 text-center">
+            <Battery className={`w-5 h-5 mx-auto ${batteryStatus.level <= 20 ? 'text-destructive' : 'text-success'}`} />
+            <p className="text-lg font-display font-bold text-foreground mt-1">{batteryStatus.level}%</p>
+            <p className="text-[10px] text-muted-foreground">Battery</p>
           </div>
-          <div className="text-xs text-muted-foreground">
-            {gpsData.latitude?.toFixed(4)}, {gpsData.longitude?.toFixed(4)}
+          <div className="bg-card/50 border border-border rounded-xl p-3 text-center">
+            {networkStatus.isOnline ? (
+              <Wifi className="w-5 h-5 mx-auto text-success" />
+            ) : (
+              <WifiOff className="w-5 h-5 mx-auto text-warning" />
+            )}
+            <p className="text-lg font-display font-bold text-foreground mt-1 capitalize">
+              {networkStatus.isOnline ? networkStatus.connectionType : 'Off'}
+            </p>
+            <p className="text-[10px] text-muted-foreground">Network</p>
           </div>
+          <button 
+            onClick={() => navigate('/status')}
+            className="bg-card/50 border border-border rounded-xl p-3 text-center hover:bg-card transition-colors"
+          >
+            <Radio className="w-5 h-5 mx-auto text-primary" />
+            <p className="text-lg font-display font-bold text-foreground mt-1">Mesh</p>
+            <p className="text-[10px] text-muted-foreground">Status</p>
+          </button>
         </div>
 
         {/* SOS Section */}
-        <section className="py-8 px-4 flex flex-col items-center">
+        <section className="py-10 px-4 flex flex-col items-center">
           <SOSButton onActivate={handleSOSActivate} isActive={sosActive} />
+          <p className="text-xs text-muted-foreground mt-4 text-center max-w-[200px]">
+            Hold for 3 seconds to activate emergency mode
+          </p>
         </section>
 
         {sosActive && (
@@ -127,29 +126,39 @@ const Index = () => {
           </div>
         )}
 
-        {/* Navigation Menu */}
-        <section className="px-4 space-y-2">
-          <h2 className="font-display font-bold text-lg text-foreground mb-3">Features</h2>
-          {menuItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className="w-full flex items-center gap-4 p-4 bg-card/50 border border-border rounded-xl hover:bg-card transition-colors"
-            >
-              <div className={`p-2.5 rounded-xl ${item.bg}`}>
-                <item.icon className={`w-5 h-5 ${item.color}`} />
+        {/* Location Card */}
+        <button 
+          onClick={() => navigate('/location')}
+          className="mx-4 w-[calc(100%-2rem)] bg-card/50 border border-border rounded-xl p-4 hover:bg-card transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/20">
+                <MapPin className="w-5 h-5 text-primary" />
               </div>
-              <div className="flex-1 text-left">
-                <p className="font-display font-semibold text-foreground">{item.label}</p>
-                <p className="text-xs text-muted-foreground">{item.desc}</p>
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">Current Location</p>
+                <p className="text-xs text-muted-foreground font-mono">
+                  {gpsData.latitude?.toFixed(5)}, {gpsData.longitude?.toFixed(5)}
+                </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </button>
-          ))}
-        </section>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Navigation className="w-3 h-3" />
+              {gpsData.heading ? `${Math.round(gpsData.heading)}°` : '--'}
+            </div>
+          </div>
+        </button>
+
+        {/* Swipe Hint */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-muted-foreground">
+            ← Swipe to navigate between pages →
+          </p>
+        </div>
 
         {!networkStatus.isOnline && (
-          <div className="fixed bottom-4 left-4 right-4 bg-warning/20 border border-warning/30 rounded-xl p-3 backdrop-blur-sm">
+          <div className="fixed bottom-20 left-4 right-4 bg-warning/20 border border-warning/30 rounded-xl p-3 backdrop-blur-sm z-40">
             <p className="text-sm text-warning text-center font-medium">📡 Offline Mode - All features active</p>
           </div>
         )}

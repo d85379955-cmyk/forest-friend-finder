@@ -1,26 +1,17 @@
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Wrench } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Wrench } from "lucide-react";
 import { SurvivalTools } from "@/components/SurvivalTools";
 
 export default function Tools() {
-  const navigate = useNavigate();
-
   return (
-    <div className="min-h-screen bg-background hexagon-bg">
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border/50">
+    <div className="min-h-screen bg-background hexagon-bg pb-24">
+      <header className="sticky top-0 z-40 backdrop-blur-lg bg-background/80 border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-warning/20">
-              <Wrench className="w-6 h-6 text-warning" />
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-lg">Survival Tools</h1>
-              <p className="text-xs text-muted-foreground">Essential utilities</p>
-            </div>
+          <div className="p-2 rounded-xl bg-warning/20">
+            <Wrench className="w-6 h-6 text-warning" />
+          </div>
+          <div>
+            <h1 className="font-display font-bold text-lg">Survival Tools</h1>
+            <p className="text-xs text-muted-foreground">Essential utilities</p>
           </div>
         </div>
       </header>

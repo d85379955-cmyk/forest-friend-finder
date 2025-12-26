@@ -1,6 +1,4 @@
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 import { EmergencyContacts } from "@/components/EmergencyContacts";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { toast } from "sonner";
@@ -18,7 +16,6 @@ const defaultContacts: Contact[] = [
 ];
 
 export default function Contacts() {
-  const navigate = useNavigate();
   const { value: contacts, setValue: setContacts } = useLocalStorage<Contact[]>(
     "emergency_contacts",
     defaultContacts
@@ -35,20 +32,15 @@ export default function Contacts() {
   };
 
   return (
-    <div className="min-h-screen bg-background hexagon-bg">
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border/50">
+    <div className="min-h-screen bg-background hexagon-bg pb-24">
+      <header className="sticky top-0 z-40 backdrop-blur-lg bg-background/80 border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-destructive/20">
-              <Users className="w-6 h-6 text-destructive" />
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-lg">Emergency Contacts</h1>
-              <p className="text-xs text-muted-foreground">Quick access to help</p>
-            </div>
+          <div className="p-2 rounded-xl bg-destructive/20">
+            <Users className="w-6 h-6 text-destructive" />
+          </div>
+          <div>
+            <h1 className="font-display font-bold text-lg">Emergency Contacts</h1>
+            <p className="text-xs text-muted-foreground">Quick access to help</p>
           </div>
         </div>
       </header>
