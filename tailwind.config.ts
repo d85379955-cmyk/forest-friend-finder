@@ -95,7 +95,19 @@ export default {
           to: { height: "0" },
         },
       },
+      keyframes: {
+        "slide-in-left": {
+          "0%": { transform: "translateX(30%)", opacity: "0", scale: "0.95" },
+          "100%": { transform: "translateX(0)", opacity: "1", scale: "1" },
+        },
+        "slide-in-right": {
+          "0%": { transform: "translateX(-30%)", opacity: "0", scale: "0.95" },
+          "100%": { transform: "translateX(0)", opacity: "1", scale: "1" },
+        },
+      },
       animation: {
+        "slide-in-left": "slide-in-left 0.3s ease-out forwards",
+        "slide-in-right": "slide-in-right 0.3s ease-out forwards",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },

@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { BatteryStatus } from "@/components/BatteryStatus";
 import { SignalStatus } from "@/components/SignalStatus";
 import { BluetoothMesh } from "@/components/BluetoothMesh";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
 import { useNativeNetwork } from "@/hooks/useNativeNetwork";
 import { useBattery } from "@/hooks/useBattery";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useNativeHaptics } from "@/hooks/useNativeHaptics";
+import { NotificationType } from "@capacitor/haptics";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -17,6 +20,8 @@ export default function Status() {
   const networkStatus = useNativeNetwork();
   const batteryStatus = useBattery();
   const { value: survivalMode } = useLocalStorage("survival_mode", false);
+  const { notification } = useNativeHaptics();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const getSignalStrength = () => {
     if (!networkStatus.isOnline) return 0;
@@ -27,8 +32,15 @@ export default function Status() {
     return 1;
   };
 
+  const handleRefresh = async () => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setRefreshKey(prev => prev + 1);
+    notification(NotificationType.Success);
+    toast.success("Status refreshed");
+  };
+
   return (
-    <div className="min-h-screen bg-background hexagon-bg">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background hexagon-bg pb-24">
       <header className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
@@ -46,7 +58,7 @@ export default function Status() {
         </div>
       </header>
 
-      <main className="p-4 space-y-4">
+      <main className="p-4 space-y-4" key={refreshKey}>
         <BatteryStatus
           level={batteryStatus.level}
           isCharging={batteryStatus.isCharging}
@@ -75,6 +87,6 @@ export default function Status() {
           </div>
         </div>
       </main>
-    </div>
+    </PullToRefresh>
   );
 }

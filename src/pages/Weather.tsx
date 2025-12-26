@@ -1,15 +1,28 @@
+import { useState } from "react";
 import { Cloud } from "lucide-react";
 import { WeatherAlerts } from "@/components/WeatherAlerts";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
 import { useNativeNetwork } from "@/hooks/useNativeNetwork";
+import { useNativeHaptics } from "@/hooks/useNativeHaptics";
+import { NotificationType } from "@capacitor/haptics";
 import { toast } from "sonner";
 
 export default function Weather() {
   const gpsData = useNativeGPS(true);
   const networkStatus = useNativeNetwork();
+  const { notification } = useNativeHaptics();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = async () => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setRefreshKey(prev => prev + 1);
+    notification(NotificationType.Success);
+    toast.success("Weather refreshed");
+  };
 
   return (
-    <div className="min-h-screen bg-background hexagon-bg pb-24">
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-screen bg-background hexagon-bg pb-24">
       <header className="sticky top-0 z-40 backdrop-blur-lg bg-background/80 border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <div className="p-2 rounded-xl bg-accent/20">
@@ -22,7 +35,7 @@ export default function Weather() {
         </div>
       </header>
 
-      <main className="p-4 space-y-4">
+      <main className="p-4 space-y-4" key={refreshKey}>
         <WeatherAlerts
           latitude={gpsData.latitude}
           longitude={gpsData.longitude}
@@ -40,6 +53,6 @@ export default function Weather() {
           </div>
         </div>
       </main>
-    </div>
+    </PullToRefresh>
   );
 }
