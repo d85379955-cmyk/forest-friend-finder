@@ -4,6 +4,8 @@ import { ArrowLeft, MapPin, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GPSDisplay } from "@/components/GPSDisplay";
 import { OfflineMap } from "@/components/OfflineMap";
+import { MapTileDownloader } from "@/components/MapTileDownloader";
+import { BackgroundLocationStatus } from "@/components/BackgroundLocationStatus";
 import { useNativeGPS } from "@/hooks/useNativeGPS";
 
 export default function Location() {
@@ -12,7 +14,7 @@ export default function Location() {
   const [mapOpen, setMapOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background hexagon-bg">
+    <div className="min-h-screen bg-background hexagon-bg pb-24">
       <header className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
@@ -31,6 +33,7 @@ export default function Location() {
       </header>
 
       <main className="p-4 space-y-4">
+        {/* GPS Display */}
         <div className="rounded-xl border border-border bg-card p-4">
           <GPSDisplay
             latitude={gpsData.latitude}
@@ -41,6 +44,7 @@ export default function Location() {
           />
         </div>
 
+        {/* Open Map Button */}
         <Button
           onClick={() => setMapOpen(true)}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -49,13 +53,21 @@ export default function Location() {
           Open Offline Map
         </Button>
 
+        {/* Background Location Tracking */}
+        <BackgroundLocationStatus />
+
+        {/* Offline Map Tile Downloader */}
+        <MapTileDownloader />
+
+        {/* Feature Info */}
         <div className="bg-card/50 border border-border rounded-xl p-4">
           <h3 className="font-display font-semibold text-foreground mb-3">GPS Features</h3>
           <div className="space-y-3 text-sm text-muted-foreground">
             <p>📍 <strong className="text-foreground">Live Tracking:</strong> Continuous GPS updates with accuracy monitoring.</p>
             <p>🧭 <strong className="text-foreground">Compass Heading:</strong> Shows your direction of travel.</p>
-            <p>🗺️ <strong className="text-foreground">Offline Map:</strong> Compass-based navigation that works without internet.</p>
+            <p>🗺️ <strong className="text-foreground">Offline Maps:</strong> Download map tiles for offline navigation.</p>
             <p>📌 <strong className="text-foreground">Waypoints:</strong> Mark and save important locations offline.</p>
+            <p>🔄 <strong className="text-foreground">Background Tracking:</strong> Continues tracking even when app is closed.</p>
           </div>
         </div>
       </main>
